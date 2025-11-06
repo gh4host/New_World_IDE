@@ -1,0 +1,46 @@
+body {
+  font-family: Consolas, monospace;
+  background-color: #181818;
+  color: #e0e0e0;
+  margin: 20px;
+}
+
+h1 {
+  text-align: center;
+}
+
+#tabs button {
+  background-color: #303030;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  margin-right: 5px;
+}
+
+#tabs button:hover {
+  background-color: #505050;
+}
+
+.tab {
+  display: none;
+  margin-top: 20px;
+}
+
+textarea {
+  width: 100%;
+  height: 300px;
+  background: #111;
+  color: #0f0;
+  border: 1px solid #333;
+  padding: 10px;
+  resize: none;
+}
+
+pre {
+  background: #111;
+  padding: 10px;
+  border: 1px solid #333;
+  overflow-x: auto;
+  color: #0f0;
+}
