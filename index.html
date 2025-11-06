@@ -1,51 +1,99 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>New Peace Studio</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>New Peace Studio</title>
+<style>
+body { font-family: monospace; background: #1e1e1e; color: #f5f5f5; margin:0; }
+#editor { width: 100%; height: 200px; background:#2e2e2e; color:#f5f5f5; padding:5px; }
+#output { width: 100%; height:200px; background:#111; color:#0f0; padding:5px; overflow:auto; }
+button { margin: 5px; }
+</style>
 </head>
 <body>
-  <h1>New Peace Studio</h1>
 
-  <div id="tabs">
-    <button onclick="showTab('projects')">Проекты</button>
-    <button onclick="showTab('editor')">Редактор</button>
-    <button onclick="showTab('plugins')">Плагины</button>
-    <button onclick="showTab('console')">Консоль</button>
-  </div>
+<h2>New Peace Studio</h2>
+<select id="languageSelect">
+  <option value="python">Python</option>
+  <option value="js">JavaScript</option>
+</select>
+<button onclick="createProject()">Новый проект</button>
+<button onclick="saveCurrentProject()">Сохранить</button>
+<button onclick="runCode()">▶ Запустить</button>
 
-  <div id="content">
-    <div id="projects" class="tab">
-      <h2>Проекты</h2>
-      <label>Выбери язык:</label>
-      <select id="languageSelect" onchange="updateProjectList()">
-        <option value="python">Python</option>
-        <option value="js">JavaScript</option>
-        <option value="html">HTML</option>
-      </select>
-      <ul id="projectList"></ul>
-      <button onclick="createProject()">Создать новый проект</button>
-    </div>
+<div id="editor" contenteditable="true">print("Привет, Эльдар!")</div>
+<div id="output"></div>
 
-    <div id="editor" class="tab">
-      <h2>Редактор</h2>
-      <textarea id="codeArea" placeholder="Пиши код здесь..."></textarea>
-      <button onclick="runCode()">▶ Запустить</button>
-    </div>
+<script type="module">
+import { loadPyodide } from './pyodide.js';
 
-    <div id="plugins" class="tab">
-      <h2>Плагины</h2>
-      <div id="pluginList">Загрузка плагинов...</div>
-    </div>
+let pyodide;
+let currentLang = "python";
+let currentProject = null;
 
-    <div id="console" class="tab">
-      <h2>Консоль</h2>
-      <pre id="output"></pre>
-    </div>
-  </div>
+async function main() {
+  log("⏳ Загружается Python...");
+  pyodide = await loadPyodide({ indexURL: './' });
+  log("✅ Python готов!");
+  loadPlugins();
+  updateProjectList();
+}
 
-  <script src="pyodide/pyodide.js"></script>
-  <script src="script.js"></script>
+function log(text) {
+  const out = document.getElementById("output");
+  out.textContent += text + "\n";
+}
+
+function updateProjectList() {
+  currentLang = document.getElementById("languageSelect").value;
+  const projects = JSON.parse(localStorage.getItem(`projects_${currentLang}`) || "[]");
+  // можно добавить UI списка проектов
+}
+
+function createProject() {
+  const name = prompt("Имя проекта:");
+  if (!name) return;
+  const projects = JSON.parse(localStorage.getItem(`projects_${currentLang}`) || "[]");
+  projects.push({ name, code: "" });
+  localStorage.setItem(`projects_${currentLang}`, JSON.stringify(projects));
+}
+
+function openProject(index) {
+  const projects = JSON.parse(localStorage.getItem(`projects_${currentLang}`) || "[]");
+  currentProject = index;
+  document.getElementById("editor").textContent = projects[index].code;
+}
+
+function saveCurrentProject() {
+  if (currentProject === null) return;
+  const code = document.getElementById("editor").textContent;
+  const projects = JSON.parse(localStorage.getItem(`projects_${currentLang}`) || "[]");
+  projects[currentProject].code = code;
+  localStorage.setItem(`projects_${currentLang}`, JSON.stringify(projects));
+}
+
+async function runCode() {
+  saveCurrentProject();
+  const code = document.getElementById("editor").textContent;
+  if(currentLang==="python") {
+    try{
+      const result = await pyodide.runPythonAsync(code);
+      log(result || "✅ Готово");
+    } catch(e) { log("❌ Ошибка: "+e); }
+  } else if(currentLang==="js") {
+    try{ const result = eval(code); log(result||"✅ Готово"); }
+    catch(e){ log("❌ Ошибка JS: "+e); }
+  } else { log("⚠ Язык пока не поддерживается"); }
+}
+
+function loadPlugins() {
+  const pluginList = document.getElementById("pluginList");
+  // пока просто заглушка — плагины добавляются через localStorage
+  log("✅ Плагины загружены (добавьте .py файлы через localStorage)");
+}
+
+main();
+</script>
+
 </body>
 </html>
