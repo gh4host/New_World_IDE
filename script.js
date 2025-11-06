@@ -6,7 +6,7 @@ async function main() {
   showTab("projects");
   log("⏳ Загружается Python...");
   try {
-    pyodide = await loadPyodide({ indexURL: "pyodide/" });
+    pyodide = await loadPyodide({ indexURL: './pyodide/' });
     log("✅ Python готов!");
   } catch(e) {
     log("❌ Ошибка загрузки Pyodide: " + e);
@@ -94,3 +94,4 @@ async function loadPlugins() {
 }
 
 main();
+
