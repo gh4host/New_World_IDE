@@ -1,34 +1,4 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<title>New Peace Studio</title>
-<style>
-body { font-family: monospace; background: #1e1e1e; color: #f5f5f5; margin:0; padding:10px; }
-#editor { width: 100%; height: 200px; background:#2e2e2e; color:#f5f5f5; padding:5px; }
-#output { width: 100%; height:200px; background:#111; color:#0f0; padding:5px; overflow:auto; margin-top:10px; }
-button { margin: 5px; }
-select { margin: 5px; }
-</style>
-</head>
-<body>
-
-<h2>New Peace Studio</h2>
-
-<select id="languageSelect">
-  <option value="python">Python</option>
-  <option value="js">JavaScript</option>
-  <option value="html">HTML</option>
-</select>
-<button onclick="createProject()">Новый проект</button>
-<button onclick="saveCurrentProject()">Сохранить</button>
-<button onclick="runCode()">▶ Запустить</button>
-
-<div id="editor" contenteditable="true">print("Привет, Эльдар!")</div>
-<div id="output"></div>
-
-<script type="module">
-import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js";
+import { loadPyodide } from './pyodide/pyodide.js';
 
 let pyodide = null;
 let currentLang = "python";
@@ -42,17 +12,17 @@ function log(text) {
 function updateProjectList() {
   currentLang = document.getElementById("languageSelect").value;
   const projects = JSON.parse(localStorage.getItem(`projects_${currentLang}`) || "[]");
-  // можно добавить UI списка проектов
+  // UI for project list can be added later
 }
 
 function createProject() {
-  const name = prompt("Имя проекта:");
+  const name = prompt("Project name:");
   if (!name) return;
   const projects = JSON.parse(localStorage.getItem(`projects_${currentLang}`) || "[]");
   projects.push({ name, code: "" });
   localStorage.setItem(`projects_${currentLang}`, JSON.stringify(projects));
   updateProjectList();
-  log(`✅ Проект "${name}" создан`);
+  log(`✅ Project "${name}" created`);
 }
 
 function openProject(index) {
@@ -67,27 +37,27 @@ function saveCurrentProject() {
   const projects = JSON.parse(localStorage.getItem(`projects_${currentLang}`) || "[]");
   projects[currentProject].code = code;
   localStorage.setItem(`projects_${currentLang}`, JSON.stringify(projects));
-  log("✅ Проект сохранён");
+  log("✅ Project saved");
 }
 
 async function runCode() {
   saveCurrentProject();
   const code = document.getElementById("editor").textContent;
-  
+
   if (currentLang === "python") {
-    if (!pyodide) { log("❌ Pyodide не загружен"); return; }
+    if (!pyodide) { log("❌ Pyodide not loaded"); return; }
     try {
       const result = await pyodide.runPythonAsync(code);
-      log(result ?? "✅ Готово");
+      log(result ?? "✅ Done");
     } catch(e) {
-      log("❌ Ошибка: " + e);
+      log("❌ Error: " + e);
     }
   } else if (currentLang === "js") {
     try {
       const result = eval(code);
-      log(result ?? "✅ Готово");
+      log(result ?? "✅ Done");
     } catch(e) {
-      log("❌ Ошибка JS: " + e);
+      log("❌ JS Error: " + e);
     }
   } else if (currentLang === "html") {
     const iframe = document.createElement("iframe");
@@ -97,33 +67,28 @@ async function runCode() {
     iframe.contentDocument.open();
     iframe.contentDocument.write(code);
     iframe.contentDocument.close();
-    log("✅ HTML отображён");
+    log("✅ HTML displayed");
   } else {
-    log("⚠️ Этот язык пока не поддерживается");
+    log("⚠️ This language is not supported yet");
   }
 }
 
 async function loadPlugins() {
-  // пока просто заглушка
-  log("✅ Плагины загружены (можно добавить .py файлы через localStorage)");
+  log("✅ Plugins loaded (add .py files in plugins folder)");
 }
 
 async function main() {
-  log("⏳ Загружается Python...");
+  log("⏳ Loading Python...");
   try {
     pyodide = await loadPyodide({
-      indexURL: "https://cdn.jsdelivr.net/pyodide/v0.23.4/full/"
+      indexURL: "./pyodide/"
     });
-    log("✅ Python готов!");
+    log("✅ Python ready!");
   } catch(e) {
-    log("❌ Ошибка загрузки Pyodide: " + e);
+    log("❌ Pyodide load error: " + e);
   }
   await loadPlugins();
   updateProjectList();
 }
 
 main();
-</script>
-
-</body>
-</html>
