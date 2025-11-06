@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>New Peace Studio</title>
@@ -7,46 +7,21 @@
 </head>
 <body>
 
-<h1>New Peace Studio</h1>
+<h2>New Peace Studio</h2>
 
-<div id="tabs">
-  <button onclick="showTab('projects')">Проекты</button>
-  <button onclick="showTab('editor')">Редактор</button>
-  <button onclick="showTab('plugins')">Плагины</button>
-  <button onclick="showTab('console')">Консоль</button>
-</div>
+<select id="languageSelect">
+  <option value="python">Python</option>
+  <option value="js">JavaScript</option>
+  <option value="html">HTML</option>
+</select>
+<button onclick="createProject()">New Project</button>
+<button onclick="saveCurrentProject()">Save</button>
+<button onclick="runCode()">▶ Run</button>
 
-<div id="content">
-  <div id="projects" class="tab">
-    <h2>Проекты</h2>
-    <label>Выбери язык:</label>
-    <select id="languageSelect" onchange="updateProjectList()">
-      <option value="python">Python</option>
-      <option value="js">JavaScript</option>
-      <option value="html">HTML</option>
-    </select>
-    <ul id="projectList"></ul>
-    <button onclick="createProject()">Создать новый проект</button>
-  </div>
+<div id="editor" contenteditable="true">print("Hello, Eldar!")</div>
+<div id="output"></div>
 
-  <div id="editor" class="tab">
-    <h2>Редактор</h2>
-    <textarea id="codeArea" placeholder="Пиши код здесь..."></textarea>
-    <button onclick="runCode()">▶ Запустить</button>
-  </div>
+<script type="module" src="script.js"></script>
 
-  <div id="plugins" class="tab">
-    <h2>Плагины</h2>
-    <div id="pluginList">Загрузка плагинов...</div>
-  </div>
-
-  <div id="console" class="tab">
-    <h2>Консоль</h2>
-    <pre id="output"></pre>
-  </div>
-</div>
-
-<script src="pyodide/pyodide.js"></script>
-<script src="script.js"></script>
 </body>
 </html>
