@@ -1,7 +1,4 @@
-import { loadPyodide } from './pyodide/pyodide.js';
-
-let pyodide = null;
-let currentLang = "python";
+let currentLang = "js";
 let currentProject = null;
 
 function log(text) {
@@ -11,6 +8,8 @@ function log(text) {
 
 function updateProjectList() {
   currentLang = document.getElementById("languageSelect").value;
+  const projects = JSON.parse(localStorage.getItem(`projects_${currentLang}`) || "[]");
+  // можно добавить UI списка проектов
 }
 
 function createProject() {
@@ -19,7 +18,14 @@ function createProject() {
   const projects = JSON.parse(localStorage.getItem(`projects_${currentLang}`) || "[]");
   projects.push({ name, code: "" });
   localStorage.setItem(`projects_${currentLang}`, JSON.stringify(projects));
+  updateProjectList();
   log(`✅ Project "${name}" created`);
+}
+
+function openProject(index) {
+  const projects = JSON.parse(localStorage.getItem(`projects_${currentLang}`) || "[]");
+  currentProject = index;
+  document.getElementById("editor").textContent = projects[index].code;
 }
 
 function saveCurrentProject() {
@@ -28,63 +34,45 @@ function saveCurrentProject() {
   const projects = JSON.parse(localStorage.getItem(`projects_${currentLang}`) || "[]");
   projects[currentProject].code = code;
   localStorage.setItem(`projects_${currentLang}`, JSON.stringify(projects));
-  log("✅ Project saved");
+  log(`✅ Project saved`);
 }
 
-async function runCode() {
+function runCode() {
   saveCurrentProject();
   const code = document.getElementById("editor").textContent;
+  const lang = document.getElementById("languageSelect").value;
+  const output = document.getElementById("output");
 
-  if (currentLang === "python") {
-    if (!pyodide) { log("❌ Pyodide not loaded"); return; }
-    try {
-      const result = await pyodide.runPythonAsync(code);
-      log(result ?? "✅ Done");
-    } catch(e) {
-      log("❌ Python Error: " + e);
-    }
-  } else if (currentLang === "js") {
+  if(lang === "js") {
     try {
       const result = eval(code);
-      log(result ?? "✅ Done");
+      log(result !== undefined ? result : "✅ JS executed");
     } catch(e) {
       log("❌ JS Error: " + e);
     }
-  } else if (currentLang === "html") {
+  }
+  else if(lang === "html") {
     const iframe = document.createElement("iframe");
-    iframe.style.width = "100%";
-    iframe.style.height = "200px";
-    document.getElementById("output").appendChild(iframe);
+    iframe.style.width="100%";
+    iframe.style.height="200px";
+    output.appendChild(iframe);
     iframe.contentDocument.open();
     iframe.contentDocument.write(code);
     iframe.contentDocument.close();
-    log("✅ HTML displayed");
-  } else {
-    log("⚠️ This language is not supported yet");
+    log("✅ HTML rendered");
+  }
+  else if(lang === "css") {
+    const style = document.getElementById("dynamicStyle") || document.createElement("style");
+    style.id = "dynamicStyle";
+    style.textContent = code;
+    document.head.appendChild(style);
+    log("✅ CSS applied");
+  }
+  else {
+    log("⚠️ Language not supported");
   }
 }
 
-async function loadPlugins() {
-  log("✅ Plugins loaded (add .py files in plugins folder)");
-}
-
-async function main() {
-  log("⏳ Loading Python...");
-  try {
-    pyodide = await loadPyodide({
-      indexURL: "./pyodide/"
-    });
-    log("✅ Python ready!");
-  } catch(e) {
-    log("❌ Pyodide load error: " + e);
-  }
-  loadPlugins();
-  updateProjectList();
-}
-
-// Attach buttons
-document.getElementById("newProjectBtn").onclick = createProject;
-document.getElementById("saveBtn").onclick = saveCurrentProject;
-document.getElementById("runBtn").onclick = runCode;
-
-main();
+// Initialize
+updateProjectList();
+log("IDE ready. Select language and write code above.");
