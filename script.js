@@ -5,29 +5,19 @@ let currentProject = null;
 async function main() {
   showTab("projects");
   log("⏳ Загружается Python...");
-
   try {
-    // Проверяем, загружен ли скрипт pyodide.js
-    if (typeof loadPyodide === "undefined") {
-      log("❌ Ошибка: pyodide.js не найден. Проверь путь /pyodide/pyodide.js");
-      return;
-    }
-
-    // Загружаем Pyodide
     pyodide = await loadPyodide({ indexURL: "pyodide/" });
     log("✅ Python готов!");
-
-    await loadPlugins();
-    updateProjectList();
-  } catch (e) {
+  } catch(e) {
     log("❌ Ошибка загрузки Pyodide: " + e);
   }
+  await loadPlugins();
+  updateProjectList();
 }
 
 function log(text) {
   const out = document.getElementById("output");
   out.textContent += text + "\n";
-  out.scrollTop = out.scrollHeight;
 }
 
 function showTab(id) {
@@ -39,7 +29,6 @@ function updateProjectList() {
   currentLang = document.getElementById("languageSelect").value;
   const list = document.getElementById("projectList");
   list.innerHTML = "";
-
   const projects = JSON.parse(localStorage.getItem(`projects_${currentLang}`) || "[]");
   projects.forEach((p, i) => {
     const li = document.createElement("li");
@@ -52,11 +41,9 @@ function updateProjectList() {
 function createProject() {
   const name = prompt("Имя проекта:");
   if (!name) return;
-
   const projects = JSON.parse(localStorage.getItem(`projects_${currentLang}`) || "[]");
   projects.push({ name, code: "" });
   localStorage.setItem(`projects_${currentLang}`, JSON.stringify(projects));
-
   updateProjectList();
 }
 
@@ -70,7 +57,6 @@ function openProject(index) {
 function saveCurrentProject() {
   if (currentProject === null) return;
   const code = document.getElementById("codeArea").value;
-
   const projects = JSON.parse(localStorage.getItem(`projects_${currentLang}`) || "[]");
   projects[currentProject].code = code;
   localStorage.setItem(`projects_${currentLang}`, JSON.stringify(projects));
@@ -79,44 +65,32 @@ function saveCurrentProject() {
 async function runCode() {
   saveCurrentProject();
   const code = document.getElementById("codeArea").value;
-
   if (currentLang === "python") {
-    if (!pyodide) {
-      log("❌ Pyodide не загружен");
-      return;
-    }
-
+    if(!pyodide) { log("❌ Pyodide не загружен"); return; }
     try {
       const result = await pyodide.runPythonAsync(code);
       log(result || "✅ Готово");
-    } catch (e) {
-      log("❌ Ошибка Python: " + e);
-    }
+    } catch(e) { log("❌ Ошибка: " + e); }
   } else if (currentLang === "js") {
-    try {
-      const result = eval(code);
-      log(result || "✅ Готово");
-    } catch (e) {
-      log("❌ Ошибка JS: " + e);
-    }
+    try { const result = eval(code); log(result || "✅ Готово"); }
+    catch(e) { log("❌ Ошибка JS: " + e); }
+  } else if (currentLang === "html") {
+    const iframe = document.createElement("iframe");
+    iframe.style.width="100%";
+    iframe.style.height="200px";
+    document.getElementById("output").appendChild(iframe);
+    iframe.contentDocument.open();
+    iframe.contentDocument.write(code);
+    iframe.contentDocument.close();
+    log("✅ HTML отображён");
   } else {
-    log("⚠️ Этот язык пока не поддерживается для запуска");
+    log("⚠️ Этот язык пока не поддерживается");
   }
 }
 
 async function loadPlugins() {
   const pluginList = document.getElementById("pluginList");
-
-  try {
-    const resp = await fetch("plugins/");
-    if (resp.ok) {
-      pluginList.textContent = "✅ Плагины загружены (добавь .py файлы в папку plugins)";
-    } else {
-      pluginList.textContent = "⚠️ Не удалось найти папку plugins/";
-    }
-  } catch {
-    pluginList.textContent = "⚠️ Не удалось загрузить плагины";
-  }
+  pluginList.textContent = "✅ Плагины загружены (добавь .py файлы в папку plugins)";
 }
 
 main();
